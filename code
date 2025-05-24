@@ -1,0 +1,81 @@
+import matplotlib.pyplot as plt
+from fpdf import FPDF
+import pandas as pd
+from google.colab import files
+
+# Step 1: Create a nicer chart and save as 'chart.png'
+plt.figure(figsize=(8, 4))  # Wider figure
+plt.plot([1, 2, 3], [3, 2, 5], marker='o', linestyle='-', color='teal', linewidth=2)
+plt.title("S&P 500 Chart", fontsize=16, fontweight='bold')
+plt.xlabel("Day", fontsize=12)
+plt.ylabel("Value", fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.6)  # Light dashed grid
+plt.tight_layout()
+plt.savefig("chart.png")
+plt.close()
+
+# Dummy data for demonstration (replace with your actual DataFrames)
+sp500_history = pd.DataFrame({
+    'Open': [4200.25, 4210.75, 4195.60],
+    'High': [4220.45, 4235.30, 4205.10],
+    'Low': [4190.20, 4200.00, 4185.80],
+    'Close': [4210.50, 4225.10, 4199.25],
+}, index=pd.date_range(start='2023-05-20', periods=3))
+
+sp500_history_summary = pd.DataFrame({
+    'Metric': ['Mean', 'Max', 'Min'],
+    'Open': [4202.20, 4210.75, 4195.60],
+    'Close': [4211.62, 4225.10, 4199.25],
+})
+
+# Function to print DataFrame as a table in PDF
+def output_df_to_pdf(pdf, df):
+    pdf.set_font("Arial", size=10)
+    col_width = pdf.w / (len(df.columns) + 1)
+    # Header
+    for col_name in df.columns:
+        pdf.cell(col_width, 10, str(col_name), border=1)
+    pdf.ln()
+    # Rows
+    for i in range(len(df)):
+        for item in df.iloc[i]:
+            pdf.cell(col_width, 10, str(item), border=1)
+        pdf.ln()
+
+# Step 2: Create PDF object
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font('Arial', 'B', 16)
+
+# Step 3: Add title
+pdf.cell(40, 10, 'Daily S&P 500 prices report')
+pdf.ln(20)
+
+# Step 4: Add chart image to PDF
+pdf.image('chart.png', x=10, w=180)
+pdf.ln(20)
+
+# Step 5: Prepare historical data table
+sp500_history_pdf = sp500_history.reset_index()
+sp500_history_pdf['Date'] = sp500_history_pdf['index'].astype(str)
+sp500_history_pdf.drop(columns='index', inplace=True)
+numeric_cols = sp500_history_pdf.select_dtypes(include='number').columns
+sp500_history_pdf[numeric_cols] = sp500_history_pdf[numeric_cols].round(2)
+
+# Print last 3 rows of historical data table
+output_df_to_pdf(pdf, sp500_history_pdf.tail(3))
+pdf.ln(20)
+
+# Step 6: Prepare summary data table
+sp500_history_summary_pdf = sp500_history_summary.reset_index(drop=True)
+numeric_cols = sp500_history_summary_pdf.select_dtypes(include='number').columns
+sp500_history_summary_pdf[numeric_cols] = sp500_history_summary_pdf[numeric_cols].round(2)
+
+# Print summary data table
+output_df_to_pdf(pdf, sp500_history_summary_pdf)
+
+# Step 7: Save PDF file
+pdf.output('fpdf_pdf_report.pdf', 'F')
+
+# Step 8: Download PDF in Colab
+files.download('fpdf_pdf_report.pdf')
