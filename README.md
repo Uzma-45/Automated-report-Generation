@@ -64,7 +64,7 @@ You can run this project entirely on Google Colab without installing anything lo
   
 2. Copy-paste the full script into a new notebook
    
-3. Run the cells in order (they include chart generation, table creation, and PDF output)
+3. Run the code in cell (they include chart generation, table creation, and PDF output)
    
 4. At the end, the PDF will be downloaded to your device automatically
 
